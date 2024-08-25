@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21BCE0277</title>
+</head>
+<body>
+    <h1>Data Processor</h1>
+    <div>
+        <textarea id="jsonInput" placeholder="Enter JSON data"></textarea>
+        <button id="submitBtn">Submit POST</button>
+        <button id="getBtn">Submit GET</button>
+    </div>
+    <div id="responseContainer"></div>
+
+    <!-- JavaScript Code -->
+    <script>
+        // POST Request
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            const jsonInput = document.getElementById('jsonInput').value.trim(); // Trim any extra spaces
+
+            try {
+                console.log("Raw Input:", jsonInput);  // Log the raw input to the console
+
+                // Parse the input to ensure it's valid JSON
+                const parsedInput = JSON.parse(jsonInput);
+                console.log("Parsed Input:", parsedInput);  // Log the parsed input to the console
+
+                if (!parsedInput || !parsedInput.data || !Array.isArray(parsedInput.data)) {
+                    throw new Error("Invalid JSON format or structure.");
+                }
+
+                // Send the parsed JSON data to the backend
+                const response = await fetch('http://127.0.0.1:5000/bfhl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(parsedInput), // Send the parsed JSON data
+                });
+
+                const responseData = await response.json();
+                console.log("Response Data:", responseData);  // Log the response data to the console
+                displayResponse(responseData);
+            } catch (error) {
+                alert('Invalid JSON format. Please enter valid JSON.');
+                console.error('Error:', error);
+            }
+        });
+
+        // GET Request
+        document.getElementById('getBtn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/bfhl', {
+                    method: 'GET',
+                });
+
+                const responseData = await response.json();
+                console.log("GET Response Data:", responseData);  // Log the response data to the console
+                displayResponse(responseData);
+            } catch (error) {
+                alert('Error occurred during GET request.');
+                console.error('Error:', error);
+            }
+        });
+
+        function displayResponse(responseData) {
+            const responseContainer = document.getElementById('responseContainer');
+            if (responseData.operation_code) {
+                // If the response only contains the operation code
+                responseContainer.innerHTML = `
+                    <h2>Response:</h2>
+                    <p><strong>Operation Code:</strong> ${responseData.operation_code}</p>
+                `;
+            } else {
+                // If the response contains the full data from POST request
+                responseContainer.innerHTML = `
+                    <h2>Response:</h2>
+                    <p><strong>User ID:</strong> ${responseData.user_id || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${responseData.email || 'N/A'}</p>
+                    <p><strong>Roll Number:</strong> ${responseData.roll_number || 'N/A'}</p>
+                    <p><strong>Numbers:</strong> ${responseData.numbers ? responseData.numbers.join(', ') : 'N/A'}</p>
+                    <p><strong>Alphabets:</strong> ${responseData.alphabets ? responseData.alphabets.join(', ') : 'N/A'}</p>
+                    <p><strong>Highest Lowercase Alphabet:</strong> ${responseData.highest_lowercase_alphabet ? responseData.highest_lowercase_alphabet.join(', ') : 'N/A'}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
